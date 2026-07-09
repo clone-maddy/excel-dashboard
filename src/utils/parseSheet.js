@@ -284,53 +284,90 @@ export function parseSheetData(workbook, sheetName) {
     }
   }
 
-  const rows = rawData
-    .slice(skipDateRows)
-    .filter((row) => row && row.some((cell) => cell !== undefined && cell !== null && String(cell).trim() !== ""))
-    .map((r) => {
-      const obj = {};
-      columns.forEach((col, i) => {
-        let val = r[i] !== undefined ? r[i] : null;
-        obj[col] = val;
-      });
-      return obj;
+  const rows = [];
+  let currentSection = "";
+  const detectedSections = new Set();
+
+  rawData.slice(skipDateRows).forEach((r) => {
+    if (!r) return;
+    const filledCells = r.map((c, i) => ({ val: c, idx: i }))
+                         .filter(cell => cell.val !== undefined && cell.val !== null && String(cell.val).trim() !== "");
+    
+    if (filledCells.length === 0) return;
+    
+    // Check if it's a section header (e.g. only 1 cell filled, and it's text)
+    if (filledCells.length === 1 && typeof filledCells[0].val === 'string') {
+      const text = filledCells[0].val.trim();
+      const lower = text.toLowerCase();
+      const isSubtotal = lower === "total" || lower === "grand total" || lower === "subtotal" || lower === "sub total" || lower === "average" || lower === "mean";
+      if (!isSubtotal && text.length > 1) {
+        currentSection = text;
+        detectedSections.add(text);
+        return; // Skip divider row
+      }
+    }
+
+    // Skip repeating header rows
+    const isHeaderRep = r.slice(0, 3).every((cellVal, cIdx) => {
+      if (cellVal === undefined || cellVal === null) return false;
+      const sVal = String(cellVal).trim().toLowerCase();
+      const colVal = String(columns[cIdx] || '').trim().toLowerCase();
+      return sVal !== "" && (colVal.includes(sVal) || sVal.includes(colVal));
     });
+
+    if (isHeaderRep) return;
+
+    // Skip subtotal rows
+    const isSubtotalRow = columns.some((col, colIdx) => {
+      const val = r[colIdx];
+      if (val === null || val === undefined) return false;
+      const str = String(val).trim().toLowerCase();
+      return (
+        str === "total" ||
+        str === "grand total" ||
+        str === "sub total" ||
+        str === "subtotal" ||
+        str.startsWith("total ") ||
+        str.startsWith("grand total ") ||
+        str.startsWith("sub total ") ||
+        str.startsWith("subtotal ") ||
+        str.endsWith(" total") ||
+        str.endsWith(" subtotal")
+      );
+    });
+
+    if (isSubtotalRow) return;
+
+    const obj = {};
+    if (currentSection) {
+      obj["Section / State"] = currentSection;
+    }
+    columns.forEach((col, i) => {
+      let val = r[i] !== undefined ? r[i] : null;
+      obj[col] = val;
+    });
+    rows.push(obj);
+  });
 
   const columnTypes = {};
   columns.forEach((col, i) => {
     columnTypes[col] = classifyColumn(rows, col, worksheet, i, skipDateRows);
   });
 
-  const processedRows = rows
-    .map((row) => {
-      const newRow = { ...row };
-      columns.forEach((col) => {
-        if (columnTypes[col] === "date" && typeof newRow[col] === "number") {
-          newRow[col] = excelDateToString(newRow[col]);
-        }
-      });
-      return newRow;
-    })
-    .filter((row) => {
-      // Filter out total/subtotal rows to prevent double-counting in charts/analytics
-      return !columns.some((col) => {
-        const val = row[col];
-        if (val === null || val === undefined) return false;
-        const str = String(val).trim().toLowerCase();
-        return (
-          str === "total" ||
-          str === "grand total" ||
-          str === "sub total" ||
-          str === "subtotal" ||
-          str.startsWith("total ") ||
-          str.startsWith("grand total ") ||
-          str.startsWith("sub total ") ||
-          str.startsWith("subtotal ") ||
-          str.endsWith(" total") ||
-          str.endsWith(" subtotal")
-        );
-      });
+  const processedRows = rows.map((row) => {
+    const newRow = { ...row };
+    columns.forEach((col) => {
+      if (columnTypes[col] === "date" && typeof newRow[col] === "number") {
+        newRow[col] = excelDateToString(newRow[col]);
+      }
     });
+    return newRow;
+  });
+
+  if (detectedSections.size > 1) {
+    columns.unshift("Section / State");
+    columnTypes["Section / State"] = "text";
+  }
 
   return { columns, rows: processedRows, columnTypes };
 }

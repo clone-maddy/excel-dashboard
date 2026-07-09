@@ -157,7 +157,7 @@ export default function DataDissector({ data, columns, columnTypes }) {
       <ResponsiveContainer width="100%" height={380}>
         <BarChart data={chartData} margin={{ top: 10, right: 15, left: -5, bottom: 65 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-          <XAxis dataKey="name" stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 9, angle: -35, textAnchor: "end" }} interval={0} />
+          <XAxis dataKey="name" stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 9, angle: -35, textAnchor: "end" }} interval={0} height={70} />
           <YAxis stroke="var(--text-sub)" tickLine={false} tickFormatter={v => fmt(v, aggFn)} tick={{ fontSize: 9 }} />
           <Tooltip contentStyle={TIP_STYLE} formatter={(v, n) => [fmt(v, aggFn), n === "value" ? metric : n]} />
           {isStack && <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "0.78rem" }} />}
