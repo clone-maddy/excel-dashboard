@@ -1,101 +1,86 @@
 import React from "react";
-import {
-  LineChart, BarChart, PieChart, Line, Bar, Pie, Cell,
-  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
-} from "recharts";
+import { AreaChartSection, BarChartSection, PieChartSection } from "./StandardCharts";
+import WeeklyMatrixVisualizer from "./WeeklyMatrixVisualizer";
+import AgingVisualizer from "./AgingVisualizer";
+import TabularVisualizer from "./TabularVisualizer";
+import TextAnalysis from "./TextAnalysis";
+import { classifySheetMode } from "../utils/parseSheet";
 
-const chartColors = ["#4CAF50", "#FF9800", "#2196F3", "#9C27B0", "#F44336"];
+export default function ChartDashboard({ data, columns, columnTypes, allColumns }) {
+  const vizColumns = allColumns || columns;
+  const sheetMode = classifySheetMode(vizColumns, data, columnTypes);
 
-export default function ChartDashboard({ data, columns, chartType }) {
-  if (!data || data.length === 0) return <p>No data to display. Please upload an Excel sheet.</p>;
+  const numericCols = columns.filter((col) => columnTypes[col] === "numeric");
+  const textCols = columns.filter((col) => columnTypes[col] === "text");
 
-  const renderChart = () => {
-    const commonProps = {
-      data,
-      margin: { top: 20, right: 30, left: 20, bottom: 5 },
-    };
-    // Recharts expects numbers for data values
-    switch (chartType) {
-      case "bar":
-        return (
-          <BarChart {...commonProps}>
-            <XAxis dataKey={columns[0]} stroke="#e0e0e0" />
-            <YAxis stroke="#e0e0e0" />
-            <Tooltip contentStyle={{ backgroundColor: "#222", border: "none", borderRadius: "8px", color: "#fff" }} />
-            <Legend />
-            {columns.slice(1).map((col, i) => (
-              <Bar key={col} dataKey={col} fill={chartColors[i % chartColors.length]} radius={[4, 4, 0, 0]} />
-            ))}
-          </BarChart>
-        );
-      case "pie":
-        const pieData = data.map((row, idx) => ({
-          name: String(row[columns[0]] || `Item ${idx}`),
-          value: Number(row[columns[1]]) || 0,
-        }));
-        return (
-          <PieChart>
-            <Tooltip contentStyle={{ backgroundColor: "#222", border: "none", borderRadius: "8px", color: "#fff" }} />
-            <Legend />
-            <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={120} label>
-              {pieData.map((entry, i) => (
-                <Cell key={`cell-${i}`} fill={chartColors[i % chartColors.length]} />
-              ))}
-            </Pie>
-          </PieChart>
-        );
-      case "line":
-      default:
-        return (
-          <LineChart {...commonProps}>
-            <XAxis dataKey={columns[0]} stroke="#e0e0e0" />
-            <YAxis stroke="#e0e0e0" />
-            <Tooltip contentStyle={{ backgroundColor: "#222", border: "none", borderRadius: "8px", color: "#fff" }} />
-            <Legend />
-            {columns.slice(1).map((col, i) => (
-              <Line key={col} type="monotone" dataKey={col} stroke={chartColors[i % chartColors.length]} activeDot={{ r: 8 }} />
-            ))}
-          </LineChart>
-        );
-    }
-  };
-
-  // Perform a small statistical summary/analysis of the columns
-  const numericColumns = columns.filter((col) => {
-    return data.some((row) => typeof row[col] === "number" || !isNaN(Number(row[col])));
-  });
+  console.log(`Detected Sheet Classification: ${sheetMode}`);
 
   return (
-    <div className="chart-dashboard-container">
-      <div className="chart-wrapper" style={{ width: "100%", height: 350 }}>
-        <ResponsiveContainer>{renderChart()}</ResponsiveContainer>
+    <div className="dynamic-dashboard-wrapper">
+      <div className="sheet-mode-banner">
+        <span className="mode-badge">
+          {sheetMode === "weeklyMatrix" && "📅 Chronological Matrix Mode"}
+          {sheetMode === "aging" && "⚠️ Receivable Aging Risk Analytics"}
+          {sheetMode === "tabular" && "📊 Tabular Multi-Metric Comparison"}
+          {sheetMode === "tracker" && "📋 Status Tracking Analytics"}
+          {sheetMode === "standard" && "⚙️ Standard Data Visualization"}
+        </span>
       </div>
 
-      <div className="analysis-summary">
-        <h3>💡 Quick Data Analysis</h3>
-        <div className="stats-grid">
-          <div className="stat-card">
-            <span className="stat-label">Total Rows</span>
-            <span className="stat-value">{data.length}</span>
-          </div>
-          {numericColumns.map((col) => {
-            const values = data.map((row) => Number(row[col])).filter((val) => !isNaN(val));
-            if (values.length === 0) return null;
-            const sum = values.reduce((a, b) => a + b, 0);
-            const avg = sum / values.length;
-            const max = Math.max(...values);
-            const min = Math.min(...values);
+      {sheetMode === "weeklyMatrix" && (
+        <WeeklyMatrixVisualizer data={data} columns={vizColumns} columnTypes={columnTypes} />
+      )}
 
-            return (
-              <div key={col} className="stat-card">
-                <span className="stat-label">{col} (Avg)</span>
-                <span className="stat-value">{avg.toFixed(2)}</span>
-                <span className="stat-subtext">Max: {max.toFixed(2)} | Min: {min.toFixed(2)}</span>
-              </div>
-            );
-          })}
+      {sheetMode === "aging" && (
+        <AgingVisualizer data={data} columns={vizColumns} columnTypes={columnTypes} />
+      )}
+
+      {sheetMode === "tabular" && (
+        <TabularVisualizer data={data} columns={vizColumns} columnTypes={columnTypes} />
+      )}
+
+      {sheetMode === "tracker" && (
+        <div className="tracker-mode-layout">
+          <TextAnalysis data={data} columns={vizColumns} columnTypes={columnTypes} />
         </div>
-      </div>
+      )}
+
+      {sheetMode === "standard" && (
+        <div className="standard-mode-layout">
+          {numericCols.length > 0 ? (
+            <div className="charts-grid">
+              <div className="chart-card">
+                <h3 className="chart-card-title">📈 Area Chart</h3>
+                <div className="chart-card-body">
+                  <AreaChartSection data={data} columns={columns} columnTypes={columnTypes} />
+                </div>
+              </div>
+              <div className="chart-card">
+                <h3 className="chart-card-title">📊 Bar Chart</h3>
+                <div className="chart-card-body">
+                  <BarChartSection data={data} columns={columns} columnTypes={columnTypes} />
+                </div>
+              </div>
+              <div className="chart-card chart-card-wide">
+                <h3 className="chart-card-title">🍩 Donut Chart</h3>
+                <div className="chart-card-body">
+                  <PieChartSection data={data} columns={columns} columnTypes={columnTypes} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="no-numeric-banner">
+              <div className="banner-content">
+                <span className="banner-icon">📊</span>
+                <div>
+                  <h3>No Numeric Data Detected</h3>
+                  <p>This sheet contains text data. The preview table below displays the raw rows.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

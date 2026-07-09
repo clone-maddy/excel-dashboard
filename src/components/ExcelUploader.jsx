@@ -2,45 +2,24 @@ import React, { useState } from "react";
 import * as XLSX from "xlsx";
 
 /**
- * Reads an Excel file (local or remote URL) and returns an object with `columns` and `rows`.
+ * Reads an Excel file (local file upload, drag-and-drop, or remote URL) and returns an object with `columns` and `rows`.
  * `onDataLoaded` receives the parsed data.
  */
 export default function ExcelUploader({ onDataLoaded }) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [dragging, setDragging] = useState(false);
 
   const processWorkbook = (workbook, sourceUrl = null) => {
-    const firstSheet = workbook.SheetNames[0];
-    if (!firstSheet) {
+    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
       throw new Error("No worksheets found in this workbook.");
     }
-    const worksheet = workbook.Sheets[firstSheet];
-    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    if (json.length === 0) {
-      throw new Error("The worksheet appears to be empty.");
-    }
-    const columns = json[0];
-    const rows = json.slice(1).map((r) => {
-      const obj = {};
-      columns.forEach((col, i) => {
-        obj[col] = r[i] !== undefined ? r[i] : null;
-      });
-      return obj;
-    });
-    
-    if (columns.length === 0) {
-      throw new Error("No columns detected in the first sheet.");
-    }
-
-    onDataLoaded({ columns, rows, sourceUrl });
+    onDataLoaded({ workbook, sourceUrl });
     setError(null);
   };
 
-  const handleFile = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
+  const handleFileProcess = async (file) => {
     setLoading(true);
     setError(null);
     try {
@@ -49,9 +28,40 @@ export default function ExcelUploader({ onDataLoaded }) {
       processWorkbook(workbook, null);
     } catch (err) {
       console.error(err);
-      setError(err.message || "Failed to read the local Excel file.");
+      setError(err.message || "Failed to read the Excel file.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFileProcess(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      // Validate file extension
+      const extension = file.name.split(".").pop().toLowerCase();
+      if (extension === "xlsx" || extension === "xls") {
+        handleFileProcess(file);
+      } else {
+        setError("Invalid file format. Please upload an Excel sheet (.xlsx, .xls).");
+      }
     }
   };
 
@@ -95,10 +105,34 @@ export default function ExcelUploader({ onDataLoaded }) {
   return (
     <div className="excel-uploader-container">
       <div className="uploader-flex">
-        {/* Local File Input */}
-        <div className="uploader-block">
-          <label className="file-label">
-            <span>📂 Choose local file</span>
+        {/* Drag and Drop Zone */}
+        <div
+          className={`uploader-block drag-drop-zone ${dragging ? "dragging" : ""}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <label className="file-label-zone">
+            <div className="uploader-icon-container">
+              <svg
+                className="uploader-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            </div>
+            <span className="file-label-text">
+              {dragging ? "Drop your sheet here!" : "Drag & Drop spreadsheet or browse"}
+            </span>
+            <span className="file-label-subtext">Supports .xlsx, .xls files</span>
             <input type="file" accept=".xlsx,.xls" onChange={handleFile} style={{ display: "none" }} />
           </label>
         </div>
