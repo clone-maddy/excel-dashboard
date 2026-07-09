@@ -301,15 +301,36 @@ export function parseSheetData(workbook, sheetName) {
     columnTypes[col] = classifyColumn(rows, col, worksheet, i, skipDateRows);
   });
 
-  const processedRows = rows.map((row) => {
-    const newRow = { ...row };
-    columns.forEach((col) => {
-      if (columnTypes[col] === "date" && typeof newRow[col] === "number") {
-        newRow[col] = excelDateToString(newRow[col]);
-      }
+  const processedRows = rows
+    .map((row) => {
+      const newRow = { ...row };
+      columns.forEach((col) => {
+        if (columnTypes[col] === "date" && typeof newRow[col] === "number") {
+          newRow[col] = excelDateToString(newRow[col]);
+        }
+      });
+      return newRow;
+    })
+    .filter((row) => {
+      // Filter out total/subtotal rows to prevent double-counting in charts/analytics
+      return !columns.some((col) => {
+        const val = row[col];
+        if (val === null || val === undefined) return false;
+        const str = String(val).trim().toLowerCase();
+        return (
+          str === "total" ||
+          str === "grand total" ||
+          str === "sub total" ||
+          str === "subtotal" ||
+          str.startsWith("total ") ||
+          str.startsWith("grand total ") ||
+          str.startsWith("sub total ") ||
+          str.startsWith("subtotal ") ||
+          str.endsWith(" total") ||
+          str.endsWith(" subtotal")
+        );
+      });
     });
-    return newRow;
-  });
 
   return { columns, rows: processedRows, columnTypes };
 }
