@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "npm run build && if exist docs rmdir /s /q docs && xcopy /e /i /y dist docs && git add docs && git commit -m \"deploy: update docs build\" && git push origin main"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
