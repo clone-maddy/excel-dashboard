@@ -4,12 +4,12 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Ca
 const chartColors = ["#6366f1", "#06b6d4", "#10b981", "#f43f5e", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 const tooltipStyle = {
-  backgroundColor: "rgba(15, 23, 42, 0.9)",
-  border: "1px solid rgba(255,255,255,0.1)",
+  backgroundColor: "var(--card-bg)",
+  border: "1px solid var(--panel-border)",
   borderRadius: "12px",
-  color: "#f8fafc",
+  color: "var(--text-main)",
   backdropFilter: "blur(16px)",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+  boxShadow: "var(--shadow)",
   fontSize: "0.82rem",
   padding: "8px 12px",
 };
@@ -197,7 +197,7 @@ export default function WeeklyMatrixVisualizer({ data, columns, columnTypes }) {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="week" stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 9 }} interval="preserveStartEnd" />
               <YAxis stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 9 }} tickFormatter={formatNumber} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(v, name) => [v !== null ? v.toLocaleString() : "N/A", name]} />
+              <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} formatter={(v, name) => [v !== null ? v.toLocaleString() : "N/A", name]} />
               {seriesNames.length > 1 && <Legend verticalAlign="top" height={36} />}
               {seriesNames.map((name, i) => (
                 <Area

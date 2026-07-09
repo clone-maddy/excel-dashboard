@@ -4,12 +4,12 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Ba
 const chartColors = ["#10b981", "#fbbf24", "#f97316", "#ef4444", "#8b5cf6", "#3b82f6"];
 
 const tooltipStyle = {
-  backgroundColor: "rgba(15, 23, 42, 0.9)",
-  border: "1px solid rgba(255,255,255,0.1)",
+  backgroundColor: "var(--card-bg)",
+  border: "1px solid var(--panel-border)",
   borderRadius: "12px",
-  color: "#f8fafc",
+  color: "var(--text-main)",
   backdropFilter: "blur(16px)",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+  boxShadow: "var(--shadow)",
   fontSize: "0.82rem",
   padding: "8px 12px",
 };
@@ -159,7 +159,7 @@ export default function AgingVisualizer({ data, columns, columnTypes }) {
             {bracketTotals.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v) => [formatCurrency(v), "Amount"]} />
+                  <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} formatter={(v) => [formatCurrency(v), "Amount"]} />
                   <Legend layout="horizontal" align="center" verticalAlign="bottom" />
                   <Pie data={bracketTotals} dataKey="value" nameKey="name" innerRadius={65} outerRadius={95} paddingAngle={3}>
                     {bracketTotals.map((_, i) => (
@@ -183,7 +183,7 @@ export default function AgingVisualizer({ data, columns, columnTypes }) {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
                   <XAxis type="number" stroke="var(--text-sub)" tickLine={false} tickFormatter={formatCurrency} tick={{ fontSize: 9 }} />
                   <YAxis type="category" dataKey="name" stroke="var(--text-sub)" tickLine={false} width={140} tick={{ fontSize: 9 }} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v) => [formatCurrency(v), "Outstanding"]} />
+                  <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} formatter={(v) => [formatCurrency(v), "Outstanding"]} />
                   <Bar dataKey="value" fill="#6366f1" radius={[0, 5, 5, 0]} maxBarSize={22} />
                 </BarChart>
               </ResponsiveContainer>

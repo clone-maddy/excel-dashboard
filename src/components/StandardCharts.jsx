@@ -7,12 +7,12 @@ import {
 const chartColors = ["#6366f1", "#06b6d4", "#10b981", "#f43f5e", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 const tooltipStyle = {
-  backgroundColor: "rgba(15, 23, 42, 0.9)",
-  border: "1px solid rgba(255,255,255,0.1)",
+  backgroundColor: "var(--card-bg)",
+  border: "1px solid var(--panel-border)",
   borderRadius: "12px",
-  color: "#f8fafc",
+  color: "var(--text-main)",
   backdropFilter: "blur(16px)",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+  boxShadow: "var(--shadow)",
   fontSize: "0.82rem",
   padding: "8px 12px",
 };
@@ -58,7 +58,7 @@ export function AreaChartSection({ data, columns, columnTypes }) {
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
         <XAxis dataKey={filtered[0]} stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => truncate(v, 12)} interval="preserveStartEnd" />
         <YAxis stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 10 }} width={55} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} />
         <Legend verticalAlign="top" height={36} formatter={(v) => truncate(v, 14)} />
         {series.map((col, i) => {
           const color = chartColors[i % chartColors.length];
@@ -85,7 +85,7 @@ export function BarChartSection({ data, columns, columnTypes }) {
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
         <XAxis dataKey={filtered[0]} stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => truncate(v, 12)} interval="preserveStartEnd" />
         <YAxis stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 10 }} width={55} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} />
         <Legend verticalAlign="top" height={36} formatter={(v) => truncate(v, 14)} />
         {series.map((col, i) => (
           <Bar key={col} dataKey={col} fill={chartColors[i % chartColors.length]} radius={[6, 6, 0, 0]} maxBarSize={40} />
@@ -111,7 +111,7 @@ export function PieChartSection({ data, columns, columnTypes }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} />
         <Legend layout="vertical" align="right" verticalAlign="middle" formatter={(v) => truncate(v, 20)} />
         <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={65} outerRadius={105} paddingAngle={3} labelLine={false}>
           {pieData.map((_, i) => (

@@ -34,12 +34,12 @@ const fmt = (num, aggFn) => {
 };
 
 const TIP_STYLE = {
-  backgroundColor: "rgba(15,23,42,0.92)",
-  border: "1px solid rgba(255,255,255,0.1)",
+  backgroundColor: "var(--card-bg)",
+  border: "1px solid var(--panel-border)",
   borderRadius: "12px",
-  color: "#f8fafc",
+  color: "var(--text-main)",
   backdropFilter: "blur(16px)",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+  boxShadow: "var(--shadow)",
   fontSize: "0.82rem",
   padding: "8px 12px",
 };
@@ -123,7 +123,7 @@ export default function DataDissector({ data, columns, columnTypes }) {
       return (
         <ResponsiveContainer width="100%" height={380}>
           <PieChart>
-            <Tooltip contentStyle={TIP_STYLE} formatter={(v) => [fmt(v, aggFn), metric]} />
+            <Tooltip contentStyle={TIP_STYLE} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} formatter={(v) => [fmt(v, aggFn), metric]} />
             <Legend wrapperStyle={{ fontSize: "0.78rem" }} />
             <Pie data={grouped} dataKey="value" nameKey="name" innerRadius={75} outerRadius={140} paddingAngle={2} label={({ name, percent }) => `${name.slice(0,12)} ${(percent*100).toFixed(1)}%`} labelLine={false}>
               {grouped.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -141,7 +141,7 @@ export default function DataDissector({ data, columns, columnTypes }) {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
             <XAxis type="number" stroke="var(--text-sub)" tickLine={false} tickFormatter={v => fmt(v, aggFn)} tick={{ fontSize: 9 }} />
             <YAxis type="category" dataKey="name" stroke="var(--text-sub)" tickLine={false} width={160} tick={{ fontSize: 9 }} />
-            <Tooltip contentStyle={TIP_STYLE} formatter={(v, n) => [fmt(v, aggFn), n === "value" ? metric : n]} />
+            <Tooltip contentStyle={TIP_STYLE} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} formatter={(v, n) => [fmt(v, aggFn), n === "value" ? metric : n]} />
             {isStack && <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "0.78rem" }} />}
             {isStack
               ? stacked.sVals.map((sv, i) => <Bar key={sv} dataKey={sv} stackId="a" fill={COLORS[i % COLORS.length]} radius={i === stacked.sVals.length - 1 ? [0,4,4,0] : undefined} />)
@@ -159,7 +159,7 @@ export default function DataDissector({ data, columns, columnTypes }) {
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
           <XAxis dataKey="name" stroke="var(--text-sub)" tickLine={false} tick={{ fontSize: 9, angle: -35, textAnchor: "end" }} interval={0} height={70} />
           <YAxis stroke="var(--text-sub)" tickLine={false} tickFormatter={v => fmt(v, aggFn)} tick={{ fontSize: 9 }} />
-          <Tooltip contentStyle={TIP_STYLE} formatter={(v, n) => [fmt(v, aggFn), n === "value" ? metric : n]} />
+          <Tooltip contentStyle={TIP_STYLE} itemStyle={{ color: 'var(--text-main)' }} labelStyle={{ color: 'var(--text-sub)' }} formatter={(v, n) => [fmt(v, aggFn), n === "value" ? metric : n]} />
           {isStack && <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "0.78rem" }} />}
           {isStack
             ? stacked.sVals.map((sv, i) => <Bar key={sv} dataKey={sv} stackId="a" fill={COLORS[i % COLORS.length]} radius={i === stacked.sVals.length - 1 ? [4,4,0,0] : undefined} />)
