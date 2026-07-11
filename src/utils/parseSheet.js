@@ -446,3 +446,60 @@ export function classifySheetMode(columns, rows, columnTypes) {
 
   return "standard";
 }
+
+export function mergeParsedSheets(parsedSheets) {
+  if (!parsedSheets || parsedSheets.length === 0) return null;
+  
+  if (parsedSheets.length === 1) {
+    return {
+      columns: [...parsedSheets[0].columns],
+      rows: parsedSheets[0].rows.map(r => ({ ...r })),
+      columnTypes: { ...parsedSheets[0].columnTypes }
+    };
+  }
+
+  // 1. Gather all unique columns
+  const allColumnsSet = new Set();
+  parsedSheets.forEach(ps => {
+    if (ps && ps.columns) {
+      ps.columns.forEach(col => allColumnsSet.add(col));
+    }
+  });
+  const columns = Array.from(allColumnsSet);
+
+  // 2. Gather all rows, pad missing columns
+  const rows = [];
+  parsedSheets.forEach(ps => {
+    if (ps && ps.rows) {
+      ps.rows.forEach(row => {
+        const mergedRow = {};
+        columns.forEach(col => {
+          mergedRow[col] = row[col] !== undefined ? row[col] : null;
+        });
+        rows.push(mergedRow);
+      });
+    }
+  });
+
+  // 3. Classify columns
+  const columnTypes = {};
+  columns.forEach(col => {
+    const types = parsedSheets
+      .filter(ps => ps && ps.columns && ps.columns.includes(col))
+      .map(ps => ps.columnTypes[col] || "text");
+    
+    const uniqueTypes = Array.from(new Set(types));
+    if (uniqueTypes.length === 1) {
+      columnTypes[col] = uniqueTypes[0];
+    } else if (uniqueTypes.includes("text")) {
+      columnTypes[col] = "text";
+    } else if (uniqueTypes.includes("date") && uniqueTypes.includes("numeric")) {
+      columnTypes[col] = "text";
+    } else {
+      columnTypes[col] = "text";
+    }
+  });
+
+  return { columns, rows, columnTypes };
+}
+

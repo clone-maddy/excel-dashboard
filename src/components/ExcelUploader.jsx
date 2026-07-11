@@ -11,11 +11,11 @@ export default function ExcelUploader({ onDataLoaded }) {
   const [error, setError] = useState(null);
   const [dragging, setDragging] = useState(false);
 
-  const processWorkbook = (workbook, sourceUrl = null) => {
+  const processWorkbook = (workbook, sourceUrl = null, fileBlob = null, fileName = "") => {
     if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
       throw new Error("No worksheets found in this workbook.");
     }
-    onDataLoaded({ workbook, sourceUrl });
+    onDataLoaded({ workbook, sourceUrl, fileBlob, fileName });
     setError(null);
   };
 
@@ -25,7 +25,7 @@ export default function ExcelUploader({ onDataLoaded }) {
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { type: "array" });
-      processWorkbook(workbook, null);
+      processWorkbook(workbook, null, file, file.name);
     } catch (err) {
       console.error(err);
       setError(err.message || "Failed to read the Excel file.");
@@ -91,7 +91,17 @@ export default function ExcelUploader({ onDataLoaded }) {
 
       const buffer = await response.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
-      processWorkbook(workbook, targetUrl);
+      
+      let fileName = "Google Sheet";
+      if (!targetUrl.includes("docs.google.com")) {
+        try {
+          const parsedUrl = new URL(targetUrl);
+          fileName = parsedUrl.pathname.split("/").pop() || "Remote Excel";
+        } catch {
+          fileName = "Remote Excel";
+        }
+      }
+      processWorkbook(workbook, targetUrl, new Blob([buffer]), fileName);
     } catch (err) {
       console.error(err);
       setError(
@@ -101,6 +111,7 @@ export default function ExcelUploader({ onDataLoaded }) {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="excel-uploader-container">
